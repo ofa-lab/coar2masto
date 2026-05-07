@@ -1,0 +1,45 @@
+#!/bin/bash
+
+main() {
+	pid=$(<$0.pid)
+
+	check_running "$@"
+	run_daemon
+}
+
+run_daemon() {
+	. ~/.virtualenvs/c2m/bin/activate
+
+	python app.py &>> $0.log &
+
+	echo $! > $0.pid
+
+	echo running as pid=$!, logging to $0.log
+}
+
+check_running() {
+	check_running_check_kill_arg $1
+	[ ! "$running" ] && return
+
+	printf "already running: pid=$pid, "
+	if [ "$1" = "-r" ]; then
+		echo "killing"
+		kill $pid
+	else
+		echo "aborting."
+		echo "(use -r to re-run, -k to kill)"
+		exit 2
+	fi
+}
+
+check_running_check_kill_arg() {
+	ps -p $pid &> /dev/null && running=1
+
+	if [ "$1" = "-k" ]; then
+		[ ! "$running" ] && echo "not running" && exit 1
+
+		echo "killing $pid"; kill $pid; exit 0
+	fi
+}
+
+main "$@"
