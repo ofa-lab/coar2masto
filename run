@@ -6,7 +6,7 @@ main() {
 }
 
 run_daemon() {
-	. ~/.virtualenvs/c2m/bin/activate
+	. ~/.virtualenvs/c2m/bin/activate || exit -1
 
 	python app.py &>> $0.log &
 
