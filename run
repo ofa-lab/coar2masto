@@ -1,8 +1,6 @@
 #!/bin/bash
 
 main() {
-	pid=$(<$0.pid)
-
 	check_running "$@"
 	run_daemon
 }
@@ -18,7 +16,16 @@ run_daemon() {
 }
 
 check_running() {
-	check_running_check_kill_arg $1
+	pid=$(<$0.pid)
+
+	ps -p $pid &> /dev/null && running=1
+
+	if [ "$1" = "-k" ]; then
+		[ ! "$running" ] && echo "not running" && exit 1
+
+		echo "killing $pid"; kill $pid; exit 0
+	fi
+
 	[ ! "$running" ] && return
 
 	printf "already running: pid=$pid, "
@@ -32,14 +39,5 @@ check_running() {
 	fi
 }
 
-check_running_check_kill_arg() {
-	ps -p $pid &> /dev/null && running=1
-
-	if [ "$1" = "-k" ]; then
-		[ ! "$running" ] && echo "not running" && exit 1
-
-		echo "killing $pid"; kill $pid; exit 0
-	fi
-}
 
 main "$@"
