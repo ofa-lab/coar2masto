@@ -8,3 +8,4 @@ API_URL = https://some.mastodon.instance
 [https://some.coar-notify/origin.ldn/inbox]
 API_TOKEN = SOME_MASTODON_APP_TOKEN
 API_URL = https://some.mastodon.instance
+SRC_NAME = the origin server given name (displayed in messages)
