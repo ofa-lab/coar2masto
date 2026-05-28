@@ -1,6 +1,9 @@
 from masto import get_config, get_client
 from errors import Error
 
+from urllib.parse import urlparse
+
+
 def handle_request(coar_request):
     conf_section = coar_request["origin"]["inbox"]
 
@@ -8,32 +11,34 @@ def handle_request(coar_request):
              or get_config(section="default.mastodon.api")
 
     m = get_client(config)
-    msg = coar_to_masto(coar_request)
+    msg = coar_to_masto(coar_request, config)
     m.status_post(msg)
 
 
-def coar_to_masto(coar_request):
-    return f"""
-    to:   {coar_request["target"]["inbox"]}
-    from: {coar_request["origin"]["inbox"]}
-    type: {coar_request["type"]}
+def coar_to_masto(coar_request, config):
+    src_name = config.get("SRC_NAME") \
+                or urlparse(coar_request["origin"]["inbox"]).netloc
 
-    {coar_request_as_text(coar_request)}
+    return f"""
+    {src_name.strip()} has recently {coar_request_as_text(coar_request).strip()}
     """
 
 
 def coar_request_as_text(coar_request):
     def endorsement():
         return f"""
-        endorsement for: {coar_request['context']['ietf:cite-as']}
-        recommendation:  {coar_request['object']['ietf:cite-as']}
-        actor:  {coar_request['actor']['name']}
+        endorsed the preprint at {coar_request['context']['ietf:cite-as']}
+
+        The recommendation was handled by {coar_request['actor']['name']}
+        and is available at {coar_request['object']['ietf:cite-as']}
         """
 
     def review():
         return f"""
-        review: {coar_request['object']['id']}
-        actor:  {coar_request['actor']['name']}
+        reviewed the preprint at {coar_request['context']['ietf:cite-as']}
+
+        The review was handled by {coar_request['actor']['name']}
+        and is available at {coar_request['object']['id']}
         """
 
     req_type = coar_request.get("type")
